@@ -11,122 +11,144 @@
   <div class="mb-3 p-2 bg-red-50 border border-red-300 text-red-800 rounded">{{ err }}</div>
 {% endif %}
 
-<form method="get" action="{{ request.url_for('items_page') }}" class="mb-4 grid md:grid-cols-4 gap-3 items-end">
-  <div class="md:col-span-2">
-    <label class="block text-sm text-gray-600 mb-1">Search</label>
-    <input
-      type="text" name="q" value="{{ q }}" placeholder="Name, set, game, notes…"
-      class="w-full border rounded-lg px-3 py-2"
-    />
-  </div>
+{% set has_active_filters = q or tag or game or set_name or rarity or condition or language
+                             or comercial_condition or (number_set is not none)
+                             or (quantity_min is not none) or (quantity_max is not none) %}
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Tag</label>
-    <select name="tag" class="w-full border rounded-lg px-3 py-2">
-      <option value="">(all)</option>
-      {% for t in all_tags %}
-        <option value="{{ t.name }}" {{ 'selected' if tag == t.name else '' }}>{{ t.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
+<div class="mb-3">
+  <button
+    type="button"
+    id="filterToggle"
+    aria-expanded="{{ 'true' if has_active_filters else 'false' }}"
+    aria-controls="filterPanel"
+    class="px-4 py-2 rounded-lg font-medium text-white bg-purple-600 hover:bg-purple-700 inline-flex items-center gap-2"
+  >
+    <span>Filters</span>
+    {% if has_active_filters %}
+      <span class="text-xs bg-blue-600 text-white rounded-full px-2 py-0.5">Active</span>
+    {% endif %}
+    <span id="filterToggleIcon">{{ '▲' if has_active_filters else '▼' }}</span>
+  </button>
+</div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Game contains</label>
-    <input name="game" value="{{ game }}" class="w-full border rounded-lg px-3 py-2" />
-  </div>
+<div id="filterPanel" class="{{ '' if has_active_filters else 'hidden' }}">
+  <form method="get" action="{{ request.url_for('items_page') }}" class="mb-4 grid md:grid-cols-4 gap-3 items-end">
+    <div class="md:col-span-2">
+      <label class="block text-sm text-gray-600 mb-1">Search</label>
+      <input
+        type="text" name="q" value="{{ q }}" placeholder="Name, set, game, notes…"
+        class="w-full border rounded-lg px-3 py-2"
+      />
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Set contains</label>
-    <input name="set_name" value="{{ set_name }}" class="w-full border rounded-lg px-3 py-2" />
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Tag</label>
+      <select name="tag" class="w-full border rounded-lg px-3 py-2">
+        <option value="">(all)</option>
+        {% for t in all_tags %}
+          <option value="{{ t.name }}" {{ 'selected' if tag == t.name else '' }}>{{ t.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Rarity</label>
-    <select name="rarity" class="w-full border rounded-lg px-3 py-2">
-      <option value="">(any)</option>
-      {% for r in rarities %}
-        {% set val = r.value %}
-        <option value="{{ val }}" {{ 'selected' if rarity == val else '' }}>{{ val }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Game contains</label>
+      <input name="game" value="{{ game }}" class="w-full border rounded-lg px-3 py-2" />
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Condition</label>
-    <select name="condition" class="w-full border rounded-lg px-3 py-2">
-      <option value="">(any)</option>
-      {% for c in conditions %}
-        {% set val = c.value %}
-        <option value="{{ val }}" {{ 'selected' if condition == val else '' }}>{{ val }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Set contains</label>
+      <input name="set_name" value="{{ set_name }}" class="w-full border rounded-lg px-3 py-2" />
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Language</label>
-    <select name="language" class="w-full border rounded-lg px-3 py-2">
-      <option value="">(any)</option>
-      {% for l in languages %}
-        {% set val = l.value %}
-        <option value="{{ val }}" {{ 'selected' if language == val else '' }}>{{ val }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Rarity</label>
+      <select name="rarity" class="w-full border rounded-lg px-3 py-2">
+        <option value="">(any)</option>
+        {% for r in rarities %}
+          {% set val = r.value %}
+          <option value="{{ val }}" {{ 'selected' if rarity == val else '' }}>{{ val }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Comercial</label>
-    <select name="comercial_condition" class="w-full border rounded-lg px-3 py-2">
-      <option value="">(any)</option>
-      {% for cc in comercial_conditions %}
-        {% set val = cc.value %}
-        <option value="{{ val }}" {{ 'selected' if comercial_condition == val else '' }}>{{ val }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Condition</label>
+      <select name="condition" class="w-full border rounded-lg px-3 py-2">
+        <option value="">(any)</option>
+        {% for c in conditions %}
+          {% set val = c.value %}
+          <option value="{{ val }}" {{ 'selected' if condition == val else '' }}>{{ val }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1"># in set</label>
-    <input type="number" min="0" step="1" name="number_set" value="{{ number_set if number_set is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Language</label>
+      <select name="language" class="w-full border rounded-lg px-3 py-2">
+        <option value="">(any)</option>
+        {% for l in languages %}
+          {% set val = l.value %}
+          <option value="{{ val }}" {{ 'selected' if language == val else '' }}>{{ val }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Qty ≥</label>
-    <input type="number" min="0" step="1" name="quantity_min" value="{{ quantity_min if quantity_min is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Comercial</label>
+      <select name="comercial_condition" class="w-full border rounded-lg px-3 py-2">
+        <option value="">(any)</option>
+        {% for cc in comercial_conditions %}
+          {% set val = cc.value %}
+          <option value="{{ val }}" {{ 'selected' if comercial_condition == val else '' }}>{{ val }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Qty ≤</label>
-    <input type="number" min="0" step="1" name="quantity_max" value="{{ quantity_max if quantity_max is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1"># in set</label>
+      <input type="number" min="0" step="1" name="number_set" value="{{ number_set if number_set is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Sort by</label>
-    <select name="sort_by" class="w-full border rounded-lg px-3 py-2">
-      <option value="name" {{ 'selected' if sort_by == 'name' else '' }}>Name</option>
-      <option value="set_name" {{ 'selected' if sort_by == 'set_name' else '' }}>Set</option>
-      <option value="game" {{ 'selected' if sort_by == 'game' else '' }}>Game</option>
-      <option value="quantity" {{ 'selected' if sort_by == 'quantity' else '' }}>Quantity</option>
-      <option value="number_set" {{ 'selected' if sort_by == 'number_set' else '' }}># in set</option>
-      <option value="rarity" {{ 'selected' if sort_by == 'rarity' else '' }}>Rarity</option>
-      <option value="condition" {{ 'selected' if sort_by == 'condition' else '' }}>Condition</option>
-      <option value="language" {{ 'selected' if sort_by == 'language' else '' }}>Language</option>
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Qty ≥</label>
+      <input type="number" min="0" step="1" name="quantity_min" value="{{ quantity_min if quantity_min is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
+    </div>
 
-  <div>
-    <label class="block text-sm text-gray-600 mb-1">Direction</label>
-    <select name="sort_dir" class="w-full border rounded-lg px-3 py-2">
-      <option value="asc" {{ 'selected' if sort_dir == 'asc' else '' }}>Asc</option>
-      <option value="desc" {{ 'selected' if sort_dir == 'desc' else '' }}>Desc</option>
-    </select>
-  </div>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Qty ≤</label>
+      <input type="number" min="0" step="1" name="quantity_max" value="{{ quantity_max if quantity_max is not none else '' }}" class="w-full border rounded-lg px-3 py-2" />
+    </div>
 
-  <input type="hidden" name="size" value="{{ size }}" />
-  <div class="md:col-span-4 flex gap-2">
-    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">Apply</button>
-    <a href="{{ request.url_for('items_page') }}" class="px-4 py-2 border rounded-lg">Clear</a>
-  </div>
-</form>
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Sort by</label>
+      <select name="sort_by" class="w-full border rounded-lg px-3 py-2">
+        <option value="name" {{ 'selected' if sort_by == 'name' else '' }}>Name</option>
+        <option value="set_name" {{ 'selected' if sort_by == 'set_name' else '' }}>Set</option>
+        <option value="game" {{ 'selected' if sort_by == 'game' else '' }}>Game</option>
+        <option value="quantity" {{ 'selected' if sort_by == 'quantity' else '' }}>Quantity</option>
+        <option value="number_set" {{ 'selected' if sort_by == 'number_set' else '' }}># in set</option>
+        <option value="rarity" {{ 'selected' if sort_by == 'rarity' else '' }}>Rarity</option>
+        <option value="condition" {{ 'selected' if sort_by == 'condition' else '' }}>Condition</option>
+        <option value="language" {{ 'selected' if sort_by == 'language' else '' }}>Language</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Direction</label>
+      <select name="sort_dir" class="w-full border rounded-lg px-3 py-2">
+        <option value="asc" {{ 'selected' if sort_dir == 'asc' else '' }}>Asc</option>
+        <option value="desc" {{ 'selected' if sort_dir == 'desc' else '' }}>Desc</option>
+      </select>
+    </div>
+
+    <input type="hidden" name="size" value="{{ size }}" />
+    <div class="md:col-span-4 flex gap-2">
+      <button class="px-4 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700">Apply</button>
+      <a href="{{ request.url_for('items_page') }}" class="px-4 py-2 rounded-lg font-medium border hover:bg-gray-50">Clear</a>
+    </div>
+  </form>
+</div>
 
 {% set export_params = [] %}
 {% if q %}{% set _ = export_params.append('q=' ~ (q|urlencode)) %}{% endif %}
@@ -141,47 +163,38 @@
 {% if quantity_min is not none %}{% set _ = export_params.append('quantity_min=' ~ quantity_min) %}{% endif %}
 {% if quantity_max is not none %}{% set _ = export_params.append('quantity_max=' ~ quantity_max) %}{% endif %}
 
-<div class="mb-4 flex flex-wrap gap-3 items-center">
-  <a
-    class="px-3 py-2 bg-green-600 text-white rounded"
-    href="{{ request.url_for('export_csv') }}{% if export_params %}?{{ export_params|join('&') }}{% endif %}"
-  >
-    Export this filter (CSV)
-  </a>
-</div>
-
 <form id="bulkForm" method="post" class="mb-4 flex flex-wrap items-end gap-3">
   <input type="hidden" name="return_to" value="{{ request.url }}">
 
   <div class="flex items-center gap-2">
     <label class="text-sm text-gray-600">Adjust Qty by</label>
-    <input type="number" name="delta" value="1" class="w-24 border rounded px-2 py-1">
+    <input type="number" name="delta" value="1" class="w-24 border rounded-lg px-2 py-1">
     <button
-      class="px-3 py-2 bg-blue-600 text-white rounded"
+      class="px-4 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700"
       formaction="{{ request.url_for('bulk_adjust_qty') }}"
     >Apply</button>
   </div>
 
   <div class="flex items-center gap-2">
     <label class="text-sm text-gray-600">Set status</label>
-    <select name="status_value" class="border rounded px-2 py-1">
+    <select name="status_value" class="border rounded-lg px-2 py-1">
       {% for cc in comercial_conditions %}<option value="{{ cc.value }}">{{ cc.value }}</option>{% endfor %}
     </select>
     <button
-      class="px-3 py-2 bg-indigo-600 text-white rounded"
+      class="px-4 py-2 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700"
       formaction="{{ request.url_for('bulk_set_status') }}"
     >Update</button>
   </div>
 
   <div class="flex items-center gap-2">
     <label class="text-sm text-gray-600">Tag</label>
-    <input name="tag_name" placeholder="tag name" class="border rounded px-2 py-1">
+    <input name="tag_name" placeholder="tag name" class="border rounded-lg px-2 py-1">
     <button
-      class="px-3 py-2 bg-emerald-600 text-white rounded"
+      class="px-4 py-2 rounded-lg font-medium text-white bg-emerald-600 hover:bg-emerald-700"
       formaction="{{ request.url_for('bulk_add_tag') }}"
     >Add</button>
     <button
-      class="px-3 py-2 bg-amber-600 text-white rounded"
+      class="px-4 py-2 rounded-lg font-medium text-white bg-amber-600 hover:bg-amber-700"
       formaction="{{ request.url_for('bulk_remove_tag') }}"
     >Remove</button>
   </div>
@@ -190,7 +203,7 @@
 
   <button
     type="submit"
-    class="px-3 py-2 bg-red-600 text-white rounded"
+    class="px-4 py-2 rounded-lg font-medium text-white bg-red-600 hover:bg-red-700"
     formaction="{{ request.url_for('bulk_delete') }}"
     onclick="return confirm('Delete selected items?');"
   >Delete selected</button>
@@ -297,12 +310,32 @@
 </nav>
 {% endif %}
 
+<div class="mt-4 flex flex-wrap gap-3 items-center">
+  <a
+    class="px-4 py-2 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700"
+    href="{{ request.url_for('export_csv') }}{% if export_params %}?{{ export_params|join('&') }}{% endif %}"
+  >
+    Export this filter (CSV)
+  </a>
+</div>
+
 <script>
   const checkAll = document.getElementById('checkAll');
   const rowChks = document.querySelectorAll('.rowChk');
   if (checkAll) {
     checkAll.addEventListener('change', (e) => {
       rowChks.forEach(ch => ch.checked = e.target.checked);
+    });
+  }
+
+  const filterToggle = document.getElementById('filterToggle');
+  const filterPanel = document.getElementById('filterPanel');
+  const filterToggleIcon = document.getElementById('filterToggleIcon');
+  if (filterToggle && filterPanel) {
+    filterToggle.addEventListener('click', () => {
+      const nowHidden = filterPanel.classList.toggle('hidden');
+      filterToggle.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+      if (filterToggleIcon) filterToggleIcon.textContent = nowHidden ? '▼' : '▲';
     });
   }
 </script>

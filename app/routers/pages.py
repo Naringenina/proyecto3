@@ -41,7 +41,7 @@ def _to_int_or_none(val: Optional[str]) -> Optional[int]:
 @router.get("/items", name="items_page", response_class=HTMLResponse)
 def items_page(
     request: Request,
-    q: Optional[str] = Query(default=None, min_length=1),
+    q: Optional[str] = Query(default=None),
     tag: Optional[str] = Query(default=None),
 
     game: Optional[str] = Query(default=None),
