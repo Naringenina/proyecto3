@@ -1,5 +1,7 @@
 import io
+
 from sqlmodel import select
+
 from app.models.inventory import InventoryItem, Rarity, Condition, Language, ComercialCondition
 
 
@@ -78,11 +80,11 @@ def test_import_csv_missing_required_column_returns_400(client):
 
 
 def test_import_csv_merge_policy_adds_quantity_to_existing(client, session):
-    _make_item(session, name="Squirtle", number_set=7, quantity=2)
+    _make_item(session, name="Squirtle", number_set=7, quantity=2, set_code="BS")
 
     csv_content = (
-        "name,game,set_name,number_set,rarity,condition,language,quantity\n"
-        "Squirtle,Pokemon,Base Set,7,Common,NM,EN,3\n"
+        "name,game,set_name,set_code,number_set,rarity,condition,language,quantity\n"
+        "Squirtle,Pokemon,Base Set,BS,7,Common,NM,EN,3\n"
     )
     client.post(
         "/import/csv",
@@ -90,5 +92,6 @@ def test_import_csv_merge_policy_adds_quantity_to_existing(client, session):
         files={"file": ("cards.csv", io.BytesIO(csv_content.encode()), "text/csv")},
     )
 
-    item = session.exec(select(InventoryItem).where(InventoryItem.name == "Squirtle")).first()
-    assert item.quantity == 5
+    items = session.exec(select(InventoryItem).where(InventoryItem.name == "Squirtle")).all()
+    assert len(items) == 1  
+    assert items[0].quantity == 5  

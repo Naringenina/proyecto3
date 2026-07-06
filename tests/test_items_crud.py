@@ -14,7 +14,7 @@ def test_create_item_success(client, session, item_payload):
 
 
 def test_create_item_missing_required_field_returns_400(client, session, item_payload):
-    del item_payload["name"]
+    item_payload["name"] = ""
     resp = client.post("/items", data=item_payload)
 
     assert resp.status_code == 400
