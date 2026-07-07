@@ -151,9 +151,9 @@ def items_page(
     all_tags = session.exec(select(Tag).order_by(Tag.name.asc())).all()
 
     return templates.TemplateResponse(
+        request,
         "items/list.html",
         {
-            "request": request,
             "items": items,
 
             "q": q or "",
@@ -192,9 +192,9 @@ def items_page(
 def new_item_page(request: Request):
     templates = request.app.state.templates
     return templates.TemplateResponse(
+        request,
         "items/new.html",
         {
-            "request": request,
             "errors": [],
             "form": {},
             "rarities": list(Rarity),
@@ -214,11 +214,12 @@ def item_detail_page(request: Request, item_id: int, session: Session = Depends(
     ).first()
     if not item:
         return templates.TemplateResponse(
+            request,
             "items/detail.html",
-            {"request": request, "item": None},
+            {"item": None},
             status_code=404,
         )
-    return templates.TemplateResponse("items/detail.html", {"request": request, "item": item})
+    return templates.TemplateResponse(request, "items/detail.html", {"item": item})
 
 @router.get("/item/{item_id}/edit", name="edit_item_page", response_class=HTMLResponse)
 def edit_item_page(request: Request, item_id: int, session: Session = Depends(get_session)):
@@ -226,9 +227,9 @@ def edit_item_page(request: Request, item_id: int, session: Session = Depends(ge
     item = session.get(InventoryItem, item_id)
     if not item:
         return templates.TemplateResponse(
+            request,
             "items/edit.html",
             {
-                "request": request,
                 "item": None,
                 "errors": ["The item didn't exits."],
                 "rarities": list(Rarity),
@@ -239,9 +240,9 @@ def edit_item_page(request: Request, item_id: int, session: Session = Depends(ge
             status_code=404,
         )
     return templates.TemplateResponse(
+        request,
         "items/edit.html",
         {
-            "request": request,
             "item": item,
             "errors": [],
             "rarities": list(Rarity),
@@ -263,14 +264,14 @@ def tags_page(request: Request, msg: Optional[str] = Query(default=None), err: O
     ).all()
     tags = [{"tag": r[0], "count": int(r[1])} for r in rows]
 
-    return templates.TemplateResponse("tags.html", {"request": request, "tags": tags, "msg": msg, "err": err})
+    return templates.TemplateResponse(request, "tags.html", {"tags": tags, "msg": msg, "err": err})
 
 @router.get("/import", name="import_page", response_class=HTMLResponse)
 def import_page(request: Request):
     templates = request.app.state.templates
-    return templates.TemplateResponse("import.html", {"request": request})
+    return templates.TemplateResponse(request, "import.html", {})
 
 @router.get("/export", name="export_page", response_class=HTMLResponse)
 def export_page(request: Request):
     templates = request.app.state.templates
-    return templates.TemplateResponse("export.html", {"request": request})
+    return templates.TemplateResponse(request, "export.html", {})

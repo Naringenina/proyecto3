@@ -16,8 +16,8 @@ router = APIRouter()
 DUPLICATE_MSG = "Already exist a card with the same key (duplicated variant)."
 
 
-def _new_item_context(request: Request, errors, raw_form: Dict[str, Any], existing=None) -> Dict[str, Any]:
-    ctx = {"request": request, "errors": errors, "form": raw_form, **enum_options()}
+def _new_item_context(errors, raw_form: Dict[str, Any], existing=None) -> Dict[str, Any]:
+    ctx = {"errors": errors, "form": raw_form, **enum_options()}
     if existing is not None:
         ctx["existing"] = existing
     return ctx
@@ -44,6 +44,8 @@ def _raw_form_echo(parsed: Dict[str, Any], *, rarity: str, condition: str, langu
 
 
 def _resolved_form_echo(raw_form: Dict[str, Any], parsed: Dict[str, Any]) -> Dict[str, Any]:
+    """Same as raw echo, but with enum fields resolved to their .value (used once
+    parsing succeeded and we only failed on the duplicate-key check)."""
     return {
         **raw_form,
         "rarity": parsed["rarity"].value if parsed["rarity"] else "",
@@ -87,7 +89,7 @@ def create_item(
 
     if errors:
         return templates.TemplateResponse(
-            "items/new.html", _new_item_context(request, errors, raw_form),
+            request, "items/new.html", _new_item_context(errors, raw_form),
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -98,8 +100,9 @@ def create_item(
     )
     if existing:
         return templates.TemplateResponse(
+            request,
             "items/new.html",
-            _new_item_context(request, [DUPLICATE_MSG], _resolved_form_echo(raw_form, parsed), existing=existing),
+            _new_item_context([DUPLICATE_MSG], _resolved_form_echo(raw_form, parsed), existing=existing),
             status_code=status.HTTP_409_CONFLICT,
         )
 
@@ -121,12 +124,15 @@ def create_item(
             condition_e=parsed["condition"], variant=parsed["variant"],
         )
         return templates.TemplateResponse(
+            request,
             "items/new.html",
-            _new_item_context(request, [DUPLICATE_MSG], _resolved_form_echo(raw_form, parsed), existing=existing),
+            _new_item_context([DUPLICATE_MSG], _resolved_form_echo(raw_form, parsed), existing=existing),
             status_code=status.HTTP_409_CONFLICT,
         )
 
-
+    # Image is optional and attached only after the item exists (its filename
+    # depends on item.id). If no file was chosen, browsers still send an
+    # UploadFile with an empty filename, so check for that explicitly.
     if image is not None and image.filename:
         try:
             rel_path = validate_and_save_image(image, item.id)
@@ -193,8 +199,9 @@ def update_item(
     item = session.get(InventoryItem, item_id)
     if not item:
         return templates.TemplateResponse(
+            request,
             "items/edit.html",
-            {"request": request, "item": None, "errors": ["The item didn't exist."], **enum_options()},
+            {"item": None, "errors": ["The item didn't exist."], **enum_options()},
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
@@ -207,8 +214,9 @@ def update_item(
 
     if errors:
         return templates.TemplateResponse(
+            request,
             "items/edit.html",
-            {"request": request, "item": item, "errors": errors, **enum_options()},
+            {"item": item, "errors": errors, **enum_options()},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -219,8 +227,9 @@ def update_item(
     )
     if existing and existing.id != item_id:
         return templates.TemplateResponse(
+            request,
             "items/edit.html",
-            {"request": request, "item": item, "errors": [DUPLICATE_MSG], "existing": existing, **enum_options()},
+            {"item": item, "errors": [DUPLICATE_MSG], "existing": existing, **enum_options()},
             status_code=status.HTTP_409_CONFLICT,
         )
 

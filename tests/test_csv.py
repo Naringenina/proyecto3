@@ -93,5 +93,5 @@ def test_import_csv_merge_policy_adds_quantity_to_existing(client, session):
     )
 
     items = session.exec(select(InventoryItem).where(InventoryItem.name == "Squirtle")).all()
-    assert len(items) == 1  
-    assert items[0].quantity == 5  
+    assert len(items) == 1
+    assert items[0].quantity == 5

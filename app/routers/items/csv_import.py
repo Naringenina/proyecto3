@@ -40,7 +40,8 @@ def import_csv(
         headers = next(reader)
     except StopIteration:
         return templates.TemplateResponse(
-            "import.html", {"request": request, "err": "Empty CSV file.", "result": None},
+            request,
+            "import.html", {"err": "Empty CSV file.", "result": None},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -51,8 +52,9 @@ def import_csv(
     missing = [f for f in required if idx.get(f) is None]
     if missing:
         return templates.TemplateResponse(
+            request,
             "import.html",
-            {"request": request, "err": f"Missing required columns: {', '.join(missing)}", "result": None},
+            {"err": f"Missing required columns: {', '.join(missing)}", "result": None},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -187,4 +189,4 @@ def import_csv(
         "created": created, "updated": updated, "skipped": skipped,
         "errors": errors, "delimiter": delim, "total_rows": created + updated + skipped,
     }
-    return templates.TemplateResponse("import.html", {"request": request, "err": None, "result": result})
+    return templates.TemplateResponse(request, "import.html", {"err": None, "result": result})
